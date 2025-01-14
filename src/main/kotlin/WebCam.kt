@@ -1,114 +1,86 @@
+//CLIENT IMPORTS
+import data.WebCamResponse
 import io.ktor.client.*
-import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.serialization.kotlinx.json.*
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.logging.*
+//REQUEST IMPORTS
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonObject
+import io.ktor.http.*
+//SERIALIZER AND CONTENT NOTIFICATION FOR JSON
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.serialization.kotlinx.json.*
+import kotlinx.coroutines.*
+import kotlinx.serialization.*
+import kotlinx.serialization.json.*
 
-//WebCam class
+
+//Singleton object to hold the reusable Json configuration.
+object JsonConfig {
+    val json = Json {
+        prettyPrint = true
+        isLenient = true
+        ignoreUnknownKeys = true // Removes unknown keys (player)
+    }
+}
+
 class WebCam(private val lat: Double = 0.0, private val lon: Double = 0.0) {
-    // Class Properties:
-    // Private is used to keep variables internal to the class.  This is encapsulation
 
-    // API Key
-    private val key: String = "hxK1iiN4GCkjymbhFO76k67rzmfQ60M1"
+    private val API_KEY: String = "hxK1iiN4GCkjymbhFO76k67rzmfQ60M1"
+    var data: WebCamResponse? = null // Nullable WebCamResponse to store the parsed data
 
-    // This will store the fetched webcam data
-    // Map<String, Any> - Map key value pair.  A key-value structure similar to JSON
-    //      -'String' - the key is always a string
-    //      -'Any'  - the value can by any time.  TODO maybe this needs to remain String?
-    // ? means it's nullable property.  It might not have a value initially
-    var data: Map<String, Any>? = null
-
-    //INIT
-    suspend fun init(){
-        // rather than async, kotlin uses coroutines.
-        // suspend function can be called within a coroutine to fetch data async
-        data = fetchWebCamData()
+    //Initializes the WebCams object by fetching and parsing the webcam data.
+    suspend fun init() {
+        data = fetchWebCamData() // Fetch and parse the data
     }
 
-    //FETCH WEBCAM DATA
-    //Fetch the data.  suspend is kotlins way of async using 'coroutine'
-
-
-    private suspend fun fetchWebCamData(): Map<String, Any>? {
+    //Fetches the webcam data from the Windy API and parses it into a WebCamResponse object.
+    private suspend fun fetchWebCamData(): WebCamResponse? {
         val url = buildBaseURL()
 
-        val client = HttpClient(CIO) {
+        //BUILD THE CLIENT
+        val client = HttpClient(CIO) {   //CIO is the 'engine'
+            //adds logging plugin
+            install(Logging) {
+                level = LogLevel.HEADERS
+            }
+            //add contentnegotiation for handling json data
             install(ContentNegotiation) {
-                json(Json { ignoreUnknownKeys = true }) // Ignore unknown JSON fields
+                //calls the method
+                json(JsonConfig.json) // Use the singleton Json instance here
             }
         }
-
         return try {
-            // Fetch the raw JSON response as a String
-            val responseText = client.get(url) {
+            // MAKE THE REQUEST
+            val response: HttpResponse = client.get(url) {
+                expectSuccess = true // Enables default validation of response
                 headers {
                     append("Content-Type", "application/json")
-                    append("x-windy-api-key", key)
+                    append("x-windy-api-key", API_KEY)
                 }
-            }.bodyAsText()
+            }
 
-            // Parse the JSON String into a Map<String, Any>
-            val parsedJson = Json.parseToJsonElement(responseText).jsonObject
+            if (response.status.value in 200..299) {
+                println("Successful response!")
 
-            // Convert JsonObject to Map<String, Any> and assign to `this.data`
-            this.data = parsedJson.toMap()
-            this.data
+                // DESERIALIZE the JSON response into WebCamResponse
+                val responseBody = response.bodyAsText()
+                JsonConfig.json.decodeFromString<WebCamResponse>(responseBody) // Use the singleton Json instance here
+            } else {
+                println("Error: ${response.status}")
+                null
+            }
+        } catch (e: Exception) {
+            println("Exception during request: ${e.message}")
+            null
         } finally {
-            client.close() // Ensure resources are freed
+            client.close() // CLOSE THE CLIENT
         }
     }
 
-    // Extension function to convert JsonObject to Map<String, Any>
-    private fun JsonObject.toMap(): Map<String, Any> {
-        return this.map { (key, value) -> key to value.toString() }.toMap()
-    }
-
-
-//    private suspend fun fetchWebCamData(): Map<String, Any>? {
-//        //Build a customer URL
-//        val url = buildBaseURL()
-//
-//        //Create an http client using ktor dependency
-//        //cio is corouting IO
-//        val client = HttpClient(CIO) {
-//            //plugin configures how data is serialized (kotlin -> json) or deserialized (json -> kotlin)
-//            //TODO - determine if this is necessary?
-//            //needed for the body() function
-//            install(ContentNegotiation) {
-//                json(Json {
-//                    ignoreUnknownKeys = true //ignores extra fields in json
-//                })
-//            }
-//        }
-
-        //Do the actual API request and then parse it.
-//        return try {
-//            // Perform the GET request and parse the response body as Map<String, Any>
-//            client.get(url) {
-//                //required headers for windy api
-//                headers {
-//                    append("Content-Type", "application/json")  //expected response type = json
-//                    append("x-windy-api-key", key)
-//                }
-//            }.body() // deserializes (json - kotlin) the response body
-//            //parses json reponse body into Map<String, Any>
-//        } finally {
-//            client.close() //close it up after finished
-//        }
-//    }
-
-    //BUILD URL
+    //Builds a custom URL for accessing the Windy API based on the provided query parameters.
     private fun buildBaseURL(): String {
-        //Builds custom URL for accessing API based on query params
-        //
         return "https://api.windy.com/webcams/api/v3/webcams?offset=0&categoryOperation=or&nearby=${lat},${lon},250&include=categories,images,location,player,urls&categories=water,island,beach,harbor,bay,coast,underwater,mountain,park,sportarea"
-
     }
-
 }
