@@ -25,7 +25,7 @@ object JsonConfig {
 class WebCams(private val lat: Double = 0.0, private val lon: Double = 0.0) {
 
     private val API_KEY: String = "hxK1iiN4GCkjymbhFO76k67rzmfQ60M1"
-    var data: WebCamResponse? = null // Nullable WebCamResponse to store the parsed data
+    private var data: WebCamResponse? = null // Nullable WebCamResponse to store the parsed data
 
     //Initializes the WebCams object by fetching and parsing the webcam data.
     suspend fun init() {
@@ -79,5 +79,53 @@ class WebCams(private val lat: Double = 0.0, private val lon: Double = 0.0) {
     //Builds a custom URL for accessing the Windy API based on the provided query parameters.
     private fun buildBaseURL(): String {
         return "https://api.windy.com/webcams/api/v3/webcams?offset=0&categoryOperation=or&nearby=${lat},${lon},250&include=categories,images,location,player,urls&categories=water,island,beach,harbor,bay,coast,underwater,mountain,park,sportarea"
+    }
+
+    //Get Titles + webcamID
+    fun printTitles() {
+        println()
+        if (data != null) {
+            println("Total webcams: ${data!!.total}")
+            for (webcam in data!!.webcams) {
+                println("Title: ${webcam.title} - WebCam ID:  ${webcam.webcamId}")
+            }
+        } else {
+            println("No data to present.")
+        }
+    }
+
+    //Get Titles + webcamID
+    fun printDetailsByWebCamID(webCamID: Long) {
+        println()
+        if (data == null){
+            println("No data avaialble for webCamId: $webCamID")
+            return
+        }
+        //Find the webcam by ID
+        val webcam = data!!.webcams.find { it.webcamId == webCamID}
+        if(webcam != null){
+            val title = webcam.title
+            val windyUrl = webcam.urls.detail
+            val providerUrl = webcam.urls.provider
+            val imagePreview = webcam.images.current.preview
+            val city = webcam.location.city
+            val country = webcam.location.country
+        //Print the Details
+        println("Details for $title (ID: $webCamID)")
+        println("City: $city, Country: $country")
+        println("Windy URL: $windyUrl")
+        println("Provider URL: $providerUrl")
+        println("Image Preview URL: $imagePreview")
+        } else {
+            println("No webcam found with ID: $webCamID")
+        }
+    }
+
+    //Get check if valid webcam ID
+    fun isValidID(webCamID: Long): Boolean {
+        return data?.webcams?.any { it.webcamId == webCamID } ?: false
+        //data?.webcams? handles if it comes back null
+        //checks if any elements exist in the list for that id
+        //?: is an 'Elvis' operator.  gives a fallback if the expression returns null.  so it will return false if webcamId returns a null value
     }
 }
