@@ -7,12 +7,9 @@ import io.ktor.client.plugins.logging.*
 //REQUEST IMPORTS
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
-import io.ktor.http.*
 //SERIALIZER AND CONTENT NOTIFICATION FOR JSON
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.serialization.kotlinx.json.*
-import kotlinx.coroutines.*
-import kotlinx.serialization.*
 import kotlinx.serialization.json.*
 
 
@@ -25,7 +22,7 @@ object JsonConfig {
     }
 }
 
-class WebCam(private val lat: Double = 0.0, private val lon: Double = 0.0) {
+class WebCams(private val lat: Double = 0.0, private val lon: Double = 0.0) {
 
     private val API_KEY: String = "hxK1iiN4GCkjymbhFO76k67rzmfQ60M1"
     var data: WebCamResponse? = null // Nullable WebCamResponse to store the parsed data
@@ -42,9 +39,9 @@ class WebCam(private val lat: Double = 0.0, private val lon: Double = 0.0) {
         //BUILD THE CLIENT
         val client = HttpClient(CIO) {   //CIO is the 'engine'
             //adds logging plugin
-            install(Logging) {
-                level = LogLevel.HEADERS
-            }
+            //install(Logging) {
+                //level = LogLevel.HEADERS
+            //}
             //add contentnegotiation for handling json data
             install(ContentNegotiation) {
                 //calls the method

@@ -26,7 +26,7 @@ dependencies {
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
 
     //for logging.  removes console errors about logging to enable this.  not necessary
-    //    implementation("ch.qos.logback:logback-classic:1.4.11")
+        implementation("ch.qos.logback:logback-classic:1.4.11")
 
 //    // Ktor dependencies for HTTP requests and JSON handling
 //    implementation("io.ktor:ktor-client-core:2.3.4") // Core Ktor client

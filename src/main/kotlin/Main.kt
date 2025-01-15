@@ -1,13 +1,32 @@
 import kotlinx.coroutines.runBlocking
 
 
-fun main() {
+fun buildData(lat: Double, lon: Double){
     runBlocking {
-        val webCams = WebCam(lat = 37.7749, lon = -122.4194) // Example: San Francisco coordinates
+        //create webCams object based off class
+        val webCams = WebCams(lat, lon)
+        //initialize it
         webCams.init() // Fetch data
-        println(webCams.data) // Print the fetched webcam data
+        //capture the data to use
+        val data = webCams.data
+        //test print it
+        println(webCams.data)
 
-        //        webCam.data?.let { printMap(it, "   ") }
+        //Present the data.  check if it's null first
+        if(data !=null){
+            //iterate through the list of webcams (see WebCamResponse.kt for defined classes for the deserialized json data)
+            for(webcams in data.webcams){
+                println("Title: ${webcams.title}")
+            }
+
+        }
 
     }
+}
+
+fun main() {
+    val lat: Double = 37.7749
+    val lon: Double = -122.4194
+
+    buildData(lat, lon)
 }
