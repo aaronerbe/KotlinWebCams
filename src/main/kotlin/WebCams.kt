@@ -3,7 +3,7 @@ import data.WebCamResponse
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
-import io.ktor.client.plugins.logging.*
+//import io.ktor.client.plugins.logging.*
 //REQUEST IMPORTS
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -24,7 +24,7 @@ object JsonConfig {
 
 class WebCams(private val lat: Double = 0.0, private val lon: Double = 0.0) {
 
-    private val API_KEY: String = "hxK1iiN4GCkjymbhFO76k67rzmfQ60M1"
+    private val apiKey: String = "hxK1iiN4GCkjymbhFO76k67rzmfQ60M1"
     private var data: WebCamResponse? = null // Nullable WebCamResponse to store the parsed data
 
     //Initializes the WebCams object by fetching and parsing the webcam data.
@@ -54,12 +54,12 @@ class WebCams(private val lat: Double = 0.0, private val lon: Double = 0.0) {
                 expectSuccess = true // Enables default validation of response
                 headers {
                     append("Content-Type", "application/json")
-                    append("x-windy-api-key", API_KEY)
+                    append("x-windy-api-key", apiKey)
                 }
             }
 
             if (response.status.value in 200..299) {
-                println("Successful response!")
+                //println("Successful response!")
 
                 // DESERIALIZE the JSON response into WebCamResponse
                 val responseBody = response.bodyAsText()
@@ -79,6 +79,19 @@ class WebCams(private val lat: Double = 0.0, private val lon: Double = 0.0) {
     //Builds a custom URL for accessing the Windy API based on the provided query parameters.
     private fun buildBaseURL(): String {
         return "https://api.windy.com/webcams/api/v3/webcams?offset=0&categoryOperation=or&nearby=${lat},${lon},250&include=categories,images,location,player,urls&categories=water,island,beach,harbor,bay,coast,underwater,mountain,park,sportarea"
+    }
+
+    //Check Lat/Lon
+    fun checkLatLon(): Boolean{
+        return data?.webcams?.isNotEmpty() ?: false //see isValidID
+    }
+
+    //Get check if valid webcam ID
+    fun isValidID(webCamID: Long): Boolean {
+        return data?.webcams?.any { it.webcamId == webCamID } ?: false
+        //data?.webcams? handles if it comes back null
+        //checks if any elements exist in the list for that id
+        //?: is an 'Elvis' operator.  gives a fallback if the expression returns null.  so it will return false if webcamId returns a null value
     }
 
     //Get Titles + webcamID
@@ -112,7 +125,7 @@ class WebCams(private val lat: Double = 0.0, private val lon: Double = 0.0) {
             val country = webcam.location.country
         //Print the Details
         println("Details for $title (ID: $webCamID)")
-        println("City: $city, Country: $country")
+        println("$city, $country")
         println("Windy URL: $windyUrl")
         println("Provider URL: $providerUrl")
         println("Image Preview URL: $imagePreview")
@@ -121,11 +134,5 @@ class WebCams(private val lat: Double = 0.0, private val lon: Double = 0.0) {
         }
     }
 
-    //Get check if valid webcam ID
-    fun isValidID(webCamID: Long): Boolean {
-        return data?.webcams?.any { it.webcamId == webCamID } ?: false
-        //data?.webcams? handles if it comes back null
-        //checks if any elements exist in the list for that id
-        //?: is an 'Elvis' operator.  gives a fallback if the expression returns null.  so it will return false if webcamId returns a null value
-    }
+
 }
