@@ -1,33 +1,46 @@
 # Overview
+### Purpose
+Purpose of this program was to learn kotlin and demonstrate basic capabilities of the language.
 
-{Important! Do not say in this section that this is college assignment. Talk about what you are trying to accomplish as a software engineer to further your learning.}
+This program takes coordinates as inputs, returns a list of public webcams in that area and allows the user to select a webcam.  Then the program provides the full list of details including links to the live webcam feeds and thumbnail images.
 
-{Provide a description of the software that you wrote to demonstrate the Kotlin language.}
+### Overall Structure
+WebCams.kt contains the Webcams class.  Here, I have created functions to fetch data, handle parsing and converting to objects, build the URL based on user inputs of lat and lon and basic getter functions that return details of interest and verify data.
 
-{Describe your purpose for writing this software.}
+WEbCamResponse.kt defines the classes for the JSON data.  All data is organized and structured in classes to greatly simplify accessing the data and provide full flexibility.  For example, data.webcam.images.current.preview.  Structure definition was greatly simplified using the JSON2Kotlin.com utility.
 
-{Provide a link to your YouTube demonstration. It should be a 4-5 minute demo of the software running and a walkthrough of the code. Focus should be on sharing what you learned about the language syntax.}
+Main.kt contains the main code.  Specifically the code that directly interacts with the user taking input and returning the data.  All inputs are verified as valid and prompts the user until correct.  
 
-[Software Demo Video](http://youtube.link.goes.here)
+### Key Features Demonstrated
++ Variables (mutable and immutable)
++ Expressions
++ Conditionals
++ Loops
++ Functions
++ Classes
++ Collections
++ Uses of When
+
+### API Functionality
+The program:
++ HTTP GET Request to Windy API using Ktor Client + CIO Engine
++ Retrieves JSON Response
++ Parse JSON and store as Objects using Kotlinx Serialization as defined in /data/WebCamResponse.kt
+
+[Software Demo Video](https://youtu.be/sxfON9RTcM8)
 
 # Development Environment
-
-{Describe the tools that you used to develop the software}
-
-{Describe the programming language that you used and any libraries.}
++ IDE:  IntelliJ
++ Main programming language:  Kotlin
++ Additional Dependencies:  Ktor, CIO, Serialization, content-negotiation
 
 # Useful Websites
-
-{Make a list of websites that you found helpful in this project}
-
 - [Kotlin Official Documentation](https://kotlinlang.org/)
-- [Kotlin Wikipedia Site](https://en.wikipedia.org/wiki/Kotlin_(programming_language))
-- [Web Site Name](http://url.link.goes.here)
+- [Ktor Documentation](https://ktor.io/docs/client-create-new-application.html)
+- [Windy API](https://api.windy.com/)
+- [JSON2Kotlin](https://json2kotlin.com/)
 
 # Future Work
-
-{Make a list of things that you need to fix, improve, and add in the future.}
-
-- Item 1
-- Item 2
-- Item 3
+- Search by City name instead of lat/lon
+- Add option to filter by categories rather than a preset list
+- API will return number of views a webcam has had which is an indication of popularity.  Could sort by popularity.  For that matter, could add other sorting features such as sort by name or location.  

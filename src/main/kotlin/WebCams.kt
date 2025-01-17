@@ -13,7 +13,10 @@ import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.*
 
 
-//Singleton object to hold the reusable Json configuration.
+/**
+ * Create a Singleton object to hold the reusable Json configuration.
+ * Just saves some duplication in the setup below
+ */
 object JsonConfig {
     val json = Json {
         prettyPrint = true
@@ -22,17 +25,25 @@ object JsonConfig {
     }
 }
 
+/**
+ * WebCam Class.
+ * Inputs lat/lon
+ */
 class WebCams(private val lat: Double = 0.0, private val lon: Double = 0.0) {
 
     private val apiKey: String = "hxK1iiN4GCkjymbhFO76k67rzmfQ60M1"
-    private var data: WebCamResponse? = null // Nullable WebCamResponse to store the parsed data
+    private var data: WebCamResponse? = null // Create Nullable data based on WebCamResponse classes to store the parsed data in
 
-    //Initializes the WebCams object by fetching and parsing the webcam data.
+    /**
+     * Initializes the WebCams object by fetching and parsing response into webcam data.
+     */
     suspend fun init() {
         data = fetchWebCamData() // Fetch and parse the data
     }
 
-    //Fetches the webcam data from the Windy API and parses it into a WebCamResponse object.
+    /**
+     * Fetches the webcam data from the Windy API and deserialize the json response using WebCamResponse
+     */
     private suspend fun fetchWebCamData(): WebCamResponse? {
         val url = buildBaseURL()
 
@@ -42,7 +53,7 @@ class WebCams(private val lat: Double = 0.0, private val lon: Double = 0.0) {
             //install(Logging) {
                 //level = LogLevel.HEADERS
             //}
-            //add contentnegotiation for handling json data
+            //add content negotiation for handling json data
             install(ContentNegotiation) {
                 //calls the method
                 json(JsonConfig.json) // Use the singleton Json instance here
@@ -60,10 +71,9 @@ class WebCams(private val lat: Double = 0.0, private val lon: Double = 0.0) {
 
             if (response.status.value in 200..299) {
                 //println("Successful response!")
-
                 // DESERIALIZE the JSON response into WebCamResponse
                 val responseBody = response.bodyAsText()
-                JsonConfig.json.decodeFromString<WebCamResponse>(responseBody) // Use the singleton Json instance here
+                JsonConfig.json.decodeFromString<WebCamResponse>(responseBody) // Using the singleton Json instance
             } else {
                 println("Error: ${response.status}")
                 null
@@ -76,17 +86,25 @@ class WebCams(private val lat: Double = 0.0, private val lon: Double = 0.0) {
         }
     }
 
-    //Builds a custom URL for accessing the Windy API based on the provided query parameters.
+    /**
+     * Builds a custom URL for accessing the Windy API based on the provided lat/lon parameters.
+     */
     private fun buildBaseURL(): String {
         return "https://api.windy.com/webcams/api/v3/webcams?offset=0&categoryOperation=or&nearby=${lat},${lon},250&include=categories,images,location,player,urls&categories=water,island,beach,harbor,bay,coast,underwater,mountain,park,sportarea"
     }
 
-    //Check Lat/Lon
+    /**
+     * Check Lat/Lon against the data to see if they return anything valid
+     * Return Boolean
+     */
     fun checkLatLon(): Boolean{
         return data?.webcams?.isNotEmpty() ?: false //see isValidID
     }
 
-    //Get check if valid webcam ID
+    /**
+     * Check if valid webcam ID by checking against data for valid
+     * Return Boolean
+     */
     fun isValidID(webCamID: Long): Boolean {
         return data?.webcams?.any { it.webcamId == webCamID } ?: false
         //data?.webcams? handles if it comes back null
@@ -94,7 +112,9 @@ class WebCams(private val lat: Double = 0.0, private val lon: Double = 0.0) {
         //?: is an 'Elvis' operator.  gives a fallback if the expression returns null.  so it will return false if webcamId returns a null value
     }
 
-    //Get Titles + webcamID
+    /**
+     * prints out the titles and webcam ids of the webcams
+     */
     fun printTitles() {
         println()
         if (data != null) {
@@ -107,16 +127,19 @@ class WebCams(private val lat: Double = 0.0, private val lon: Double = 0.0) {
         }
     }
 
-    //Get Titles + webcamID
+    /**
+     * Input webCamID
+     * Prints out details of the selected webCam
+     */
     fun printDetailsByWebCamID(webCamID: Long) {
         println()
-        if (data == null){
-            println("No data avaialble for webCamId: $webCamID")
+        if (data == null){  //if data is empty, print out msg
+            println("No data available for webCamId: $webCamID")
             return
         }
         //Find the webcam by ID
         val webcam = data!!.webcams.find { it.webcamId == webCamID}
-        if(webcam != null){
+        if(webcam != null){  //assign all the variables
             val title = webcam.title
             val windyUrl = webcam.urls.detail
             val providerUrl = webcam.urls.provider
